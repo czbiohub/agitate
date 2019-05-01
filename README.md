@@ -1,5 +1,5 @@
 # agitate
-Devtools blending the power of remote dev servers with the lightness of local laptop editing.
+Use the power of a remote dev server with the lightness of local laptop editing.
 
 
 # installation
@@ -12,7 +12,6 @@ Devtools blending the power of remote dev servers with the lightness of local la
    on dev server:
 
 ```
-        ssh ubuntu@<dev_server>
         git clone <some_repo>
         cd <repo>
 ```
@@ -22,34 +21,36 @@ Devtools blending the power of remote dev servers with the lightness of local la
 ```
         git clone <same_repo>
         cd <repo>
-        git checkout -b "work_in_progress" origin/master
+        git checkout -b "my_work_in_progress" origin/master
         agitate ubuntu@<dev_server>:<repo>
 ```
 
-   This will monitor locally on the laptop for changes to
-   any files in git.  It will autosave/autopush any changes using the
-   current branch that is checked out on the laptop, squashing
-   all changes into an automatically created autosave commit.  That
-   will be pushed both to github and to the specified dev server SSH
-   coordinates.  If there is a Makefile, it will be executed on
-   the dev server.  This is convenient for getting realtime feedback
-   on C++ or Go syntax errors, as you fix them in your laptop editor.
+   The `agitate` process continuously watches the laptop repo for changes.  As soon as a file is added or modified, `agitate`
+   pushes the change to github and to the dev server, then runs `make` on the devserver to reveal
+   syntax errors in near realtime (provided a Makefile is present).
 
-   When your work reaches a meaningful milestone, CTRL-C the agitate
-   monitor, edit the autosave commit message to something more useful,
-   then restart the monitor.
+   When work reaches a meaningful milestone, or a state that may be worth reverting to:
+   CTRL-C the `agitate` process, amend its autosave commit with a more descriptive
+   message, and restart.
 
 
-# cautions
+# caution
 
-   When it starts up, agitate will force-push to github the current top
-   commit IF THERE ARE NO ADDED OR MODIFIED FILES.  This is usually the
-   desired behavior, but under some circumstances it might overwrite
-   or lose data in github contrary to a user's wishes.  Use at your own
-   risk.
+   1. USE AT YOUR OWN RISK.  The `agitate` monitor force-pushes to github in order to update
+      its autosave commit every time it detects a change.  This is usually the
+      desired behavior, but may surprise some and cause data loss.
 
-   DO NOT INVOKE CONCURRENTLY ON THE SAME BRANCH
+   2. DO NOT INVOKE CONCURRENTLY ON THE SAME BRANCH.
+
+
+# tips
+
+For faster saving consider using SSH instead of HTTPS
+in cloning your GIT repo, then implement the following
+technique for speeding up SSH session creation:
+https://developer.rackspace.com/blog/speeding-up-ssh-session-creation/
+
 
 # see also
 
-The comment at top of [scripts/agitate](scripts/agitate) list other important information.
+The comment at top of [scripts/agitate](scripts/agitate), and read the code.
