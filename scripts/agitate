@@ -44,6 +44,7 @@
 #   Corollary 1:  No two users should be running this on the same branch.
 #   Corollary 2:  Running on master is not allowed.
 #
+# TODO:  Watch more efficiently with fsevents/inotify/etc
 
 set -e
 
