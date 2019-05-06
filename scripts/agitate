@@ -95,6 +95,19 @@ first_iteration="yes"
 autosave_commit_created="no"
 sleep=1
 
+rm  -f .git/.agitate-fsevents-sentry .git/.agitate-modified-sentry
+
+(watchmedo shell-command --recursive --timeout 5 --ignore-pattern './.git*' --command 'touch .git/.agitate-modified-sentry' .) &
+watchmedopid=$!
+
+trap "{ kill -s HUP $watchmedopid ;  sleep 1;  rm  -f .git/.agitate-fsevents-sentry .git/.agitate-modified-sentry }" SIGINT SIGTERM EXIT
+
+# First iteration => push to ensure top commit is saved to github,
+# in case edited manually before starting monitor.
+#
+# Subsequent iterations => do nothing unless change detected.
+touch .git/.agitate-modified-sentry
+
 while :
 do
     /bin/echo -n `date`
@@ -105,18 +118,9 @@ do
         #
         # No new added or modified files relative to the top commit.
         #
-        # First iteration => push to ensure top commit is saved to github,
-        # in case edited manually before starting monitor.
-        #
-        # Subsequent iterations => do nothing unless change detected.
-        #
-        if [ ${first_iteration} = "no" ]; then
-            echo -n -e "\r"
-            sleep $sleep
-            continue
-        else
-            echo ""
-        fi
+        echo -n -e "\r"
+        sleep $sleep
+        continue
     else
         rm .git/.agitate-modified-sentry
         echo ""
@@ -167,3 +171,5 @@ do
     first_iteration="no"
 
 done
+
+wait $watchmedopid
