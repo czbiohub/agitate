@@ -163,6 +163,7 @@ do
         echo "Done with remote compilation."
     fi
 
+    echo "Waiting on ${githubpid}"
     wait ${githubpid}
 
     echo "---------------------------------"
@@ -171,5 +172,3 @@ do
     first_iteration="no"
 
 done
-
-wait $watchmedopid
