@@ -93,15 +93,15 @@ echo "You may press CTRL-C at any time to terminate the monitor."
 
 first_iteration="yes"
 autosave_commit_created="no"
-sleep=1 
+sleep=1
 
 while :
 do
     /bin/echo -n `date`
 
-    (rm .agitate-fsevents-sentry 2>&1 > /dev/null && (git status --short | grep '\(^ M \|^A \)')) 2>&1 > /dev/null && touch .agitate-modified-sentry
+    (rm .git/.agitate-fsevents-sentry 2>&1 > /dev/null && (git status --short | grep '\(^ M \|^A \)')) 2>&1 > /dev/null && touch .git/.agitate-modified-sentry
 
-    if [ ! -e .agitate-modified-sentry ]; then
+    if [ ! -e .git/.agitate-modified-sentry ]; then
         #
         # No new added or modified files relative to the top commit.
         #
@@ -118,7 +118,7 @@ do
             echo ""
         fi
     else
-        rm .agitate-modified-sentry
+        rm .git/.agitate-modified-sentry
         echo ""
         if [ ${autosave_commit_created} = "no" ]; then
             git commit -a --allow-empty --no-edit --quiet -m "Autosave commit created on `date`."
@@ -141,7 +141,8 @@ do
         git status --short
     fi
 
-    (git push --force origin ${branch} --quiet ; echo "Pushed to github.") &
+    ( (git push --force origin ${branch} --quiet || (sleep 1; git push --force origin ${branch} --quiet) ) && echo "Pushed to github" || echo "**** FAILED TO PUSH TO GITHUB ****") &
+    github_pid=$!
 
     ssh ${REMOTE_USER}@${REMOTE_HOST} "(cd ${REMOTE_WORK_DIR} ; git checkout master --quiet)"
 
@@ -158,7 +159,7 @@ do
         echo "Done with remote compilation."
     fi
 
-    wait
+    wait ${githubpid}
 
     echo "---------------------------------"
 
