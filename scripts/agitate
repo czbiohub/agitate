@@ -91,7 +91,7 @@ echo "You may press CTRL-C at any time to terminate the monitor."
 
 first_iteration="yes"
 autosave_commit_created="no"
-sleep=2
+sleep=1
 
 rm  -f .git/.agitate-fsevents-sentry .git/.agitate-modified-sentry
 
@@ -119,18 +119,18 @@ do
         echo -n -e "\r"
         sleep $sleep
         continue
+    fi
+
+    rm .git/.agitate-modified-sentry
+    echo ""
+    if [ ${autosave_commit_created} = "no" ]; then
+        git commit -a --allow-empty --no-edit --quiet -m "Autosave commit created on `date`."
+        echo "Created autosave commit on top of branch ${branch}."
+        echo "From now on, will amend this commit with your every edit."
+        autosave_commit_created="yes"
     else
-        rm .git/.agitate-modified-sentry
-        echo ""
-        if [ ${autosave_commit_created} = "no" ]; then
-            git commit -a --allow-empty --no-edit --quiet -m "Autosave commit created on `date`."
-            echo "Created autosave commit on top of branch ${branch}."
-            echo "From now on, will amend this commit with your every edit."
-            autosave_commit_created="yes"
-        else
-            git commit -a --amend --allow-empty --no-edit --quiet
-            echo "Amended autosave commit on top of branch ${branch} with your changes."
-        fi
+        git commit -a --amend --allow-empty --no-edit --quiet
+        echo "Amended autosave commit on top of branch ${branch} with your changes."
     fi
 
     if [ ${first_iteration} = "yes" ]; then
@@ -165,7 +165,8 @@ do
 
     echo "---------------------------------"
 
-    sleep $sleep
     first_iteration="no"
+
+    sleep 0.1
 
 done
