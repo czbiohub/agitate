@@ -98,7 +98,7 @@ rm  -f .git/.agitate-fsevents-sentry .git/.agitate-modified-sentry
 (watchmedo shell-command --recursive --timeout 5 --ignore-pattern './.git*' --command 'touch .git/.agitate-modified-sentry' .) &
 watchmedopid=$!
 
-trap "{ kill -s HUP $watchmedopid ;  sleep 1;  rm  -f .git/.agitate-fsevents-sentry .git/.agitate-modified-sentry }" SIGINT SIGTERM EXIT
+trap "kill -s HUP ${watchmedopid}" EXIT
 
 # First iteration => push to ensure top commit is saved to github,
 # in case edited manually before starting monitor.
@@ -143,7 +143,7 @@ do
         git status --short
     fi
 
-    ( (git push --force origin ${branch} --quiet || (sleep 1; git push --force origin ${branch} --quiet) ) && echo "Pushed to github" || echo "**** FAILED TO PUSH TO GITHUB ****") &
+    ( (git push --force origin ${branch} --quiet || (echo "Github push failed once;  retrying." ; sleep 1; git push --force origin ${branch} --quiet) ) && echo "Pushed to github" || echo "**** FAILED TO PUSH TO GITHUB ****") &
     github_pid=$!
 
     ssh ${REMOTE_USER}@${REMOTE_HOST} "(cd ${REMOTE_WORK_DIR} ; git checkout master --quiet)"
