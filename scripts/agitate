@@ -93,13 +93,15 @@ echo "You may press CTRL-C at any time to terminate the monitor."
 
 first_iteration="yes"
 autosave_commit_created="no"
-sleep=1
+sleep=1 
 
 while :
 do
     /bin/echo -n `date`
 
-    if ! (git status --short | grep '\(^ M \|^A \)') 2>&1 > /dev/null; then
+    (rm .agitate-fsevents-sentry 2>&1 > /dev/null && (git status --short | grep '\(^ M \|^A \)')) 2>&1 > /dev/null && touch .agitate-modified-sentry
+
+    if [ ! -e .agitate-modified-sentry ]; then
         #
         # No new added or modified files relative to the top commit.
         #
@@ -116,6 +118,7 @@ do
             echo ""
         fi
     else
+        rm .agitate-modified-sentry
         echo ""
         if [ ${autosave_commit_created} = "no" ]; then
             git commit -a --allow-empty --no-edit --quiet -m "Autosave commit created on `date`."
