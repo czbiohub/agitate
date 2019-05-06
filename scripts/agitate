@@ -93,37 +93,44 @@ first_iteration="yes"
 autosave_commit_created="no"
 sleep=1
 
+rm  -f .git/.agitate-fsevents-sentry .git/.agitate-modified-sentry
+
+(watchmedo shell-command --recursive --timeout 5 --ignore-pattern './.git*' --command 'touch .git/.agitate-modified-sentry' .) &
+watchmedopid=$!
+
+trap "kill -s HUP ${watchmedopid}" EXIT
+
+# First iteration => push to ensure top commit is saved to github,
+# in case edited manually before starting monitor.
+#
+# Subsequent iterations => do nothing unless change detected.
+touch .git/.agitate-modified-sentry
+
 while :
 do
     /bin/echo -n `date`
 
-    if ! (git status --short | grep '\(^ M \|^A \)') 2>&1 > /dev/null; then
+    (rm .git/.agitate-fsevents-sentry 2>&1 > /dev/null && (git status --short | grep '\(^ M \|^A \)')) 2>&1 > /dev/null && touch .git/.agitate-modified-sentry
+
+    if [ ! -e .git/.agitate-modified-sentry ]; then
         #
         # No new added or modified files relative to the top commit.
         #
-        # First iteration => push to ensure top commit is saved to github,
-        # in case edited manually before starting monitor.
-        #
-        # Subsequent iterations => do nothing unless change detected.
-        #
-        if [ ${first_iteration} = "no" ]; then
-            echo -n -e "\r"
-            sleep $sleep
-            continue
-        else
-            echo ""
-        fi
+        echo -n -e "\r"
+        sleep $sleep
+        continue
+    fi
+
+    rm .git/.agitate-modified-sentry
+    echo ""
+    if [ ${autosave_commit_created} = "no" ]; then
+        git commit -a --allow-empty --no-edit --quiet -m "Autosave commit created on `date`."
+        echo "Created autosave commit on top of branch ${branch}."
+        echo "From now on, will amend this commit with your every edit."
+        autosave_commit_created="yes"
     else
-        echo ""
-        if [ ${autosave_commit_created} = "no" ]; then
-            git commit -a --allow-empty --no-edit --quiet -m "Autosave commit created on `date`."
-            echo "Created autosave commit on top of branch ${branch}."
-            echo "From now on, will amend this commit with your every edit."
-            autosave_commit_created="yes"
-        else
-            git commit -a --amend --allow-empty --no-edit --quiet
-            echo "Amended autosave commit on top of branch ${branch} with your changes."
-        fi
+        git commit -a --amend --allow-empty --no-edit --quiet
+        echo "Amended autosave commit on top of branch ${branch} with your changes."
     fi
 
     if [ ${first_iteration} = "yes" ]; then
@@ -136,7 +143,8 @@ do
         git status --short
     fi
 
-    (git push --force origin ${branch} --quiet ; echo "Pushed to github.") &
+    ( (git push --force origin ${branch} --quiet || (echo "Github push failed once;  retrying." ; sleep 1; git push --force origin ${branch} --quiet) ) && echo "Pushed to github" || echo "**** FAILED TO PUSH TO GITHUB ****") &
+    github_pid=$!
 
     ssh ${REMOTE_USER}@${REMOTE_HOST} "(cd ${REMOTE_WORK_DIR} ; git checkout master --quiet)"
 
@@ -153,11 +161,12 @@ do
         echo "Done with remote compilation."
     fi
 
-    wait
+    wait ${github_pid}
 
     echo "---------------------------------"
 
-    sleep $sleep
     first_iteration="no"
+
+    sleep 0.1
 
 done
