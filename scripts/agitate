@@ -44,8 +44,6 @@
 #   Corollary 1:  No two users should be running this on the same branch.
 #   Corollary 2:  Running on master is not allowed.
 #
-# TODO:  Watch more efficiently with fsevents/inotify/etc using...
-# watchmedo shell-command --recursive --timeout 5 --ignore-pattern './.git*' --command 'echo ${watch_src_path}' .
 
 set -e
 
@@ -93,7 +91,7 @@ echo "You may press CTRL-C at any time to terminate the monitor."
 
 first_iteration="yes"
 autosave_commit_created="no"
-sleep=1
+sleep=2
 
 rm  -f .git/.agitate-fsevents-sentry .git/.agitate-modified-sentry
 
@@ -163,8 +161,7 @@ do
         echo "Done with remote compilation."
     fi
 
-    echo "Waiting on ${githubpid}"
-    wait ${githubpid}
+    wait ${github_pid}
 
     echo "---------------------------------"
 
