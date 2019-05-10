@@ -74,9 +74,9 @@ TARGET_TYPE="Specified remote target"
 
 if [ "x${REMOTE_HOST}x" == "xx" ] && [ "x${REMOTE_WORK_DIR}x" == "xx" ]; then
     REMOTE_HOST=${REMOTE_USER}
-    for REMOTE_USER in ec2user ubuntu ec2-user $USER; do
-        if ssh ${REMOTE_USER}@${REMOTE_HOST} test -d . ; then
-            echo "Inferred remote user ${REMOTE_USER} for remote host ${REMOTE_HOST}."
+    for REMOTE_USER in ubuntu ec2-user ec2user $USER; do
+        if ssh ${REMOTE_USER}@${REMOTE_HOST} test -d .; then
+            echo "INFO:  Inferred remote user ${REMOTE_USER} for remote host ${REMOTE_HOST}."
             break
         fi
     done
