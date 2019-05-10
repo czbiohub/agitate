@@ -53,22 +53,50 @@ if [ "x${arg}x" = "xx" ] || [ "x${arg}x" = "x-hx" ] || [ "x${arg}x" = "x--helpx"
     echo "Example usage: "
     echo ""
     echo "    cd local_path_to/top_of_my_git_repo"
-    echo "    autosave_continuously.sh ubuntu@devserver.aws.com:remote_path_to/top_of_my_git_repo"
+    echo "    agitate devserver.aws.com"
+    echo ""
+    echo "This will target ubuntu@devserver.aws.com:top_of_my_git_repo."
+    echo ""
+    echo "If the remote repo is not in the remote user's home dir, or the remote username"
+    echo "is not easily guessed, you may supply those full details, like so:"
+    echo ""
+    echo "    cd local_path_to/top_of_my_git_repo"
+    echo "    agitate remoteuser@remoteserver:remote_path_to/top_of_my_git_repo"
+    echo ""
     exit 0
 fi
 
 REMOTE_USER=`echo "${arg}"  | awk -F'\(@\|\:\)' '{print $1}'`
 REMOTE_HOST=`echo "${arg}"  | awk -F'\(@\|\:\)' '{print $2}'`
 REMOTE_WORK_DIR=`echo "${arg}"  | awk -F'\(@\|\:\)' '{print $3}'`
+REPO_DIR=`basename ${PWD}`
+TARGET_TYPE="Specified remote target"
 
-if [ "x`basename ${REMOTE_WORK_DIR}`x" != "x`basename ${PWD}`x" ]; then
-    echo "ERROR:  Remote workdir basename `basename ${REMOTE_WORK_DIR}` is different from local workdir basename `basename ${PWD}`."
-    echo ""
+if [ "x${REMOTE_HOST}x" == "xx" ] && [ "x${REMOTE_WORK_DIR}x" == "xx" ]; then
+    REMOTE_HOST=${REMOTE_USER}
+    for REMOTE_USER in ubuntu ec2-user ec2user $USER; do
+        if ssh ${REMOTE_USER}@${REMOTE_HOST} test -d .; then
+            echo "INFO:  Inferred remote user '${REMOTE_USER}' for remote host '${REMOTE_HOST}'."
+            break
+        fi
+    done
+fi
+
+if [ "x${REMOTE_WORK_DIR}x" == "xx" ]; then
+    REMOTE_WORK_DIR="${REPO_DIR}"
+    TARGET_TYPE="Inferred remote target"
+elif [ "x`basename ${REMOTE_WORK_DIR}`x" != "x${REPO_DIR}x" ]; then
+    REMOTE_WORK_DIR="${REMOTE_WORK_DIR}/${REPO_DIR}"
+    TARGET_TYPE="Inferred remote target"
+fi
+
+echo "INFO:  ${TARGET_TYPE}: '${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_WORK_DIR}'."
+
+if ! ssh ${REMOTE_USER}@${REMOTE_HOST} test -d "${REMOTE_WORK_DIR}/.git";  then
+    echo "ERROR:  Cannot access remote dir '${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_WORK_DIR}/.git'."
     $0 --help
     exit 1
 fi
-
-echo "Remote target: ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_WORK_DIR}"
 
 branch=`git status | head -1 | sed 's=^On branch =='`
 spaceless=`echo $branch | sed 's=[[:blank:]]=='`

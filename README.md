@@ -33,6 +33,12 @@ Use the power of a remote dev server with the lightness of local laptop editing.
    CTRL-C the `agitate` process, amend its autosave commit with a more descriptive
    message, and restart.
 
+   It is possible to omit `ubuntu@` and even `:<repo>` from the agitate command, provided the remote repo
+   is located in the remote user's home dir.  The command becomes simply
+```
+    agitate <dev_server>
+```
+
 
 # caution
 
