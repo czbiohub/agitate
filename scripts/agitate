@@ -72,6 +72,8 @@ REMOTE_WORK_DIR=`echo "${arg}"  | awk -F'\(@\|\:\)' '{print $3}'`
 REPO_DIR=`basename ${PWD}`
 TARGET_TYPE="Specified remote target"
 
+arg2="${2}"
+
 if [ "x${REMOTE_HOST}x" == "xx" ] && [ "x${REMOTE_WORK_DIR}x" == "xx" ]; then
     REMOTE_HOST=${REMOTE_USER}
     for REMOTE_USER in ubuntu ec2-user ec2user $USER; do
@@ -134,6 +136,8 @@ trap "kill -s HUP ${watchmedopid}" EXIT
 # Subsequent iterations => do nothing unless change detected.
 touch .git/.agitate-modified-sentry
 
+warnedaboutarg2=no
+
 while :
 do
     /bin/echo -n `date`
@@ -184,9 +188,14 @@ do
 
     # If the local directory contains a makefile, do make on the remote host.
     if [ -e Makefile ]; then
-        echo "Now building."
-        ssh ${REMOTE_USER}@${REMOTE_HOST} "(cd ${REMOTE_WORK_DIR} ; make -j 8 all)" 2>&1 | sed 's=^=REMOTE_HOST:  ='
-        echo "Done with remote compilation."
+        if [ "x${arg2}" == "x" ]; then
+            echo "Now building."
+            ssh ${REMOTE_USER}@${REMOTE_HOST} "(cd ${REMOTE_WORK_DIR} ; make -j 8 all)" 2>&1 | sed 's=^=REMOTE_HOST:  ='
+            echo "Done with remote compilation."
+        elif [ ${warnedaboutarg2} != "yes" ]; then
+            warnedaboutarg2=yes
+            echo "Skipping build because of second argument '${arg2}'."
+        fi
     fi
 
     wait ${github_pid}

@@ -5,7 +5,7 @@ install_requires = [line.rstrip() for line in open(os.path.join(os.path.dirname(
 
 setup(
     name="agitate",
-    version="0.3",
+    version="0.4",
     url='https://github.com/czbiohub/agitate',
     license=open("LICENSE").readline().strip(),
     author='agitate contributors',

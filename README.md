@@ -12,6 +12,7 @@ Use the power of a remote dev server with the lightness of local laptop editing.
    on dev server:
 
 ```
+        cd ${HOME}
         git clone <some_repo>
         cd <repo>
 ```
@@ -22,7 +23,7 @@ Use the power of a remote dev server with the lightness of local laptop editing.
         git clone <same_repo>
         cd <repo>
         git checkout -b "my_work_in_progress" origin/master
-        agitate ubuntu@<dev_server>:<repo>
+        agitate <dev_server>
 ```
 
    The `agitate` process continuously watches the laptop repo for changes.  As soon as a file is added or modified, `agitate`
@@ -33,18 +34,22 @@ Use the power of a remote dev server with the lightness of local laptop editing.
    CTRL-C the `agitate` process, amend its autosave commit with a more descriptive
    message, and restart.
 
-   It is possible to omit `ubuntu@` and even `:<repo>` from the agitate command, provided the remote repo
-   is located in the remote user's home dir.  The command becomes simply
+   You may override the remote user and work dir like so:
 ```
-    agitate <dev_server>
+    agitate <remote_user>@<dev_server>:<repo_parent_dir_on_dev_server>
+```
+
+    You may omit running "make" after each remote update by providing a second argument.
+```
+    agitate <dev_server> make=none
 ```
 
 
 # caution
 
    1. USE AT YOUR OWN RISK.  The `agitate` monitor force-pushes to github in order to update
-      its autosave commit every time it detects a change.  This is usually the
-      desired behavior, but may surprise some and cause data loss.
+      its autosave commit every time it detects a change.  It will refuse to do that
+      for branch 'master'.
 
    2. DO NOT INVOKE CONCURRENTLY ON THE SAME BRANCH.
 
