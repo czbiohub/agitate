@@ -38,8 +38,7 @@ Use the power of a remote dev server with the lightness of local laptop editing.
 ```
     agitate <remote_user>@<dev_server>:<repo_parent_dir_on_dev_server>
 ```
-
-    You may omit running "make" after each remote update by providing a second argument.
+   You may omit running "make" after each remote update by providing a second argument.
 ```
     agitate <dev_server> make=none
 ```
