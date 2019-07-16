@@ -4,6 +4,8 @@ Use the power of a remote dev server with the lightness of local laptop editing.
 
 # installation
 
+On your laptop,
+
 `pip install 'git+git://github.com/czbiohub/agitate.git'`
 
 
